@@ -24,6 +24,7 @@ function Player:new(xnew,ynew)
 	attacked = 0,								-- if the unit is currently attacked, this var = 1
 	shootingTimer = 0,								-- reload time (pretend he's using a hunting rifle)
 	shootCoolDown = 1,						-- how long it takes to fire another shot
+	reloading = false,
 	color = 0,
 	onCurrentTile = 0,
 	neighbourTiles = {},
@@ -37,6 +38,7 @@ function Player:new(xnew,ynew)
 	emptyclipSound = Sound:new(),
 	reloadSound = Sound:new(),
 	
+	timer = require "utils/timer",
 	
 	-- gun stuff
 	totalAmmo = 999999,
@@ -171,7 +173,7 @@ function Player:update(dt)
 	if self.attacked == 1 then return end
 	
 	-- shoot if shooting
-	if self.shooting and self.shootingTimer <= 0 then
+	if self.shooting and self.shootingTimer <= 0 and not self.reloading then
 		if self:shoot() then
 			self.shootingTimer = self.shootCoolDown
 		else 
@@ -219,6 +221,9 @@ function Player:update(dt)
 	self.animation:update(dt)
 	self.legsAnim:rotate(self.LA)
 	self.legsAnim:update(dt)
+	
+	--timer
+	self.timer.update(dt)
 end
 
 function Player:mousepressed(x, y, button)
@@ -231,8 +236,20 @@ function Player:mousereleased(x, y, button)
 	if button == "l" then
 		self.shooting = false
 	end
+	if button == "r" and self.clipAmmo <= 0 and not self.reloading then
+		self.reloadSound:play()
+		self.reloading = true
+		self.timer.add(3, function()
+			print("done reloading")
+			self.reloading = false 
+			self.clipAmmo = 8 
+			self.totalAmmo = self.totalAmmo - 8 
+			self.shootingTimer = 0
+		end)
+	end
 end
- 
+
+-- shoots if enough ammo, returns false if clip empty
 function Player:shoot()
 	if self.clipAmmo > 0 then
 		self.gunshotSound:play()

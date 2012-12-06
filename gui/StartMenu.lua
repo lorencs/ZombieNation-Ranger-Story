@@ -10,7 +10,9 @@ function StartMenu:new(_x,_y)
 	local object = {
 		x = _x,
 		y = _y,
-		optionsVisible = false
+		optionsVisible = false,
+		hoverSound = Sound:new(),
+		selectSound = Sound:new()
 	}	
 	
 	setmetatable(object, { __index = StartMenu })
@@ -18,16 +20,30 @@ function StartMenu:new(_x,_y)
 end
 
 function StartMenu:setup()
+	self.hoverSound:init("gui/sounds/menuhover.wav")
+	self.selectSound:init("gui/sounds/menuselect.wav")
+	
 	bSG = love.graphics.newImage("gui/startgame2.png")
+	bSGhover = love.graphics.newImage("gui/startgame.png")
 	bOpt = love.graphics.newImage("gui/options2.png")
+	bOpthover = love.graphics.newImage("gui/options.png")
 	bQt = love.graphics.newImage("gui/quit2.png")
+	bQthover = love.graphics.newImage("gui/quit.png")
 	
 	-- create buttons
 	buttonStartGame = loveframes.Create("imagebutton")
 	buttonStartGame:SetPos(self.x, self.y)
 	buttonStartGame:SetImage(bSG)
 	buttonStartGame:SizeToImage() 
+	buttonStartGame.OnMouseEnter  = function(object)
+		self.hoverSound:play()
+		object:SetImage(bSGhover)
+	end
+	buttonStartGame.OnMouseExit  = function(object)
+		object:SetImage(bSG)
+	end
 	buttonStartGame.OnClick = function(object)
+		self.selectSound:play()
 		Gamestate.switch(gameSTATE)
 	end
 	
@@ -36,8 +52,16 @@ function StartMenu:setup()
 	buttonOptions:SetPos(self.x, self.y + 35)
 	buttonOptions:SetImage(bOpt)
 	buttonOptions:SizeToImage() 
+	buttonOptions.OnMouseEnter  = function(object)
+		object:SetImage(bOpthover)
+		self.hoverSound:play()
+	end
+	buttonOptions.OnMouseExit  = function(object)
+		object:SetImage(bOpt)
+	end
 	buttonOptions.OnClick = function(object)
 		--print("NO OPTIONS YET SON")
+		self.selectSound:play()
 		self.optionsVisible = not self.optionsVisible
 	end
 	
@@ -46,7 +70,16 @@ function StartMenu:setup()
 	buttonQuit:SetPos(self.x, self.y + 70)
 	buttonQuit:SetImage(bQt)
 	buttonQuit:SizeToImage() 
+	buttonQuit.OnMouseEnter  = function(object)
+		object:SetImage(bQthover)
+		self.hoverSound:play()
+	end
+	buttonQuit.OnMouseExit  = function(object)
+		object:SetImage(bQt)
+	end
 	buttonQuit.OnClick = function(object)
+		self.selectSound:play()
+		love.timer.sleep(0.5)
 		love.event.quit()
 	end
 	
