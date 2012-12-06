@@ -10,6 +10,7 @@ require "loveframes/init"
 require "Units/Point"
 require "Units/shortestPath/Astar"
 require "Units/Player"
+require "Units/Car"
 require "utils/Sound"
 
 --[[ 
@@ -184,8 +185,11 @@ end
 -- put any resetting code in here
 function gameSTATE:enter()
 	-- player
-	player = Player:new()
-	player:init()
+	--player = Player:new()
+	--player:init()
+	
+	car = Car:new()
+	car:init()
 
 	-- init menu
 	menu = Menu:new(0, width, 115)
@@ -229,10 +233,12 @@ function gameSTATE:update(dt)
 	end
 
 	-- player
-	player:update(dt)
+	--player:update(dt)
+	car:update(dt)
 	
 	-- viewpoint movement - arrow keys
-	view:update(player)
+	--view:update(player)
+	view:update(car)
 	
 	-- update unit positions
 	unitManager:update(dt)
@@ -292,7 +298,8 @@ function gameSTATE:draw()
 	unitManager:draw()
 	
 	-- player
-	player:draw()
+	--player:draw()
+	car:draw()
 	
 	-- unset camera
 	camera:unset()					
@@ -343,13 +350,13 @@ end
 
 -- callback functions needed by loveframes, we can use them too
 function gameSTATE:mousepressed(x, y, button)
-	player:mousepressed(x, y, button)
+	--player:mousepressed(x, y, button)
 	minimap:mousepressed(x, y, button)
 	loveframes.mousepressed(x, y, button)
 end
 
 function gameSTATE:mousereleased(x, y, button)
-	player:mousereleased(x, y, button)
+	--player:mousereleased(x, y, button)
 	loveframes.mousereleased(x, y, button)	
 	minimap:mousereleased()	
 end

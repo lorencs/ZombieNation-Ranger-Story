@@ -18,7 +18,6 @@ function View:new(h, map)
 end
 
 function View:update(player)
-	-- viewpoint movement - arrow keys
 	self.x = math.clamp(player.cx-width/2, self.xmin, self.xmax)
 	self.y = math.clamp(player.cy-height/2, self.ymin, self.ymax)
 end
