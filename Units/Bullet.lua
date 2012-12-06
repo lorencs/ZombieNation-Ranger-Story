@@ -16,12 +16,17 @@ function Bullet:new(_x,_y,_angle)
 	delete = false,
 	lifetime = 0,
 	bloodSprite = SpriteAnimation:new("Units/images/blood1.png", 25, 32, 4, 1),
-	bloodTimer = 0
+	bloodTimer = 0,
+	bloodSound = Sound:new()
 	}
 
 	setmetatable(object, { __index = Bullet})		
 	
     return object
+end
+
+function Bullet:init()
+	self.bloodSound:init("Units/sounds/blood.mp3")
 end
 
 function Bullet:draw()
@@ -68,6 +73,7 @@ function Bullet:update(dt, paused)
 				if (self:distanceBetweenPoints(self.prevx, self.prevy, zombie_list[i].cx, zombie_list[i].cy) <= zombie_list[i].radius+3) then
 					zombie_list[i]:die()
 					self.hit = true
+					self.bloodSound:play()
 					self.bloodSprite:load()
 					self.bloodSprite:switch(1,4,60)
 					self.bloodSprite:rotate(self.angle-90)

@@ -30,7 +30,18 @@ function Player:new(xnew,ynew)
 	bullets = {},
 	animation = SpriteAnimation:new("Units/images/playerstill.png", 10, 14, 1, 1),
 	legsAnim = SpriteAnimation:new("Units/images/playerlegs.png", 10, 12, 8, 1),
-	LA = 0									-- legs angle
+	LA = 0,		-- legs angle
+	
+	-- sounds
+	gunshotSound = Sound:new(),
+	emptyclipSound = Sound:new(),
+	reloadSound = Sound:new(),
+	
+	
+	-- gun stuff
+	totalAmmo = 999999,
+	clipAmmo = 8,
+	reloadTimer = 0
 	}
 
 	setmetatable(object, { __index = Player })		
@@ -64,6 +75,10 @@ function Player:init()
 	self.state = "standing"
 	self.speed = self.normalSpeed
 	
+	self.gunshotSound:init("Units/sounds/gunshot1.mp3")
+	self.emptyclipSound:init("Units/sounds/emptyclip.mp3")
+	self.reloadSound:init("Units/sounds/reload.mp3")
+	
 	self.animation:load()
 	self.animation:switch(1,1,120)
 	self.legsAnim:load()
@@ -91,9 +106,6 @@ function Player:draw(i)
 	love.graphics.reset()	
 	self.legsAnim:draw(self.cx,self.cy)
 	self.animation:draw(self.cx,self.cy)
-	
-	love.graphics.setColor(255,0,0)
-	love.graphics.rectangle("fill", self.cx, self.cy, 1, 1)
 end
  
 -- update function
@@ -160,8 +172,11 @@ function Player:update(dt)
 	
 	-- shoot if shooting
 	if self.shooting and self.shootingTimer <= 0 then
-		self:shoot()
-		self.shootingTimer = self.shootCoolDown
+		if self:shoot() then
+			self.shootingTimer = self.shootCoolDown
+		else 
+			self.shootingTimer = 0.3
+		end
 	end
 	
 	--updating neighbours
@@ -185,7 +200,8 @@ function Player:update(dt)
 	-- check for tile collision
 	local nextTileType = self:xyToTileType(next_x,next_y)
 	if  not (nextTileType == "G" or nextTileType == "R" or nextTileType == "F" or nextTileType == "P") then
-		return
+		self:collideWithTile(next_x,next_y)
+		--return
 	end
 	
 	-- update player's position
@@ -204,7 +220,7 @@ function Player:update(dt)
 	self.legsAnim:rotate(self.LA)
 	self.legsAnim:update(dt)
 end
- 
+
 function Player:mousepressed(x, y, button)
 	if button == "l" then
 		self.shooting = true
@@ -218,8 +234,17 @@ function Player:mousereleased(x, y, button)
 end
  
 function Player:shoot()
-	local newBullet = Bullet:new(self.cx, self.cy, self.angle)
-	table.insert(self.bullets, newBullet)
+	if self.clipAmmo > 0 then
+		self.gunshotSound:play()
+		local newBullet = Bullet:new(self.cx, self.cy, self.angle)
+		newBullet:init()
+		table.insert(self.bullets, newBullet)
+		self.clipAmmo = self.clipAmmo - 1
+		return true
+	else 
+		self.emptyclipSound:play()
+		return false
+	end
 end
 
 -- gets the angle from x1,y1 through to point x2,y2
@@ -245,4 +270,22 @@ function Player:xyToTileType(x11,y11)
 	--print("x:"..x11..",y:"..y11)
 	--print("w:"..w..",h:"..h)
 	return map.tiles[w][h].id
+end
+
+function Player:collideWithTile(x,y)
+	local currentX = math.floor(self.cx/map.tileSize)
+	local currentY = math.floor(self.cy/map.tileSize)
+	local nextX = math.floor(x/map.tileSize)
+	local nextY = math.floor(y/map.tileSize)
+	local dx = nextX - currentX
+	local dy = nextY - currentY
+	
+	if 	   (dx == 0) and (dy == -1) then 	self.ySpeed = 0
+	elseif (dx == 1) and (dy == -1) then 	self.ySpeed = 0 self.xSpeed = 0
+	elseif (dx == 1) and (dy == 0) then 	self.xSpeed = 0
+	elseif (dx == 1) and (dy == 1) then 	self.ySpeed = 0 self.xSpeed = 0
+	elseif (dx == 0) and (dy == 1) then 	self.ySpeed = 0
+	elseif (dx == -1) and (dy == 1) then 	self.ySpeed = 0 self.xSpeed = 0
+	elseif (dx == -1) and (dy == 0) then 	self.xSpeed = 0
+	elseif (dx == -1) and (dy == -1) then 	self.ySpeed = 0 self.xSpeed = 0 end
 end

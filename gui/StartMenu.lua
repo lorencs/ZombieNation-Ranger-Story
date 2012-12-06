@@ -18,9 +18,9 @@ function StartMenu:new(_x,_y)
 end
 
 function StartMenu:setup()
-	bSG = love.graphics.newImage("gui/startgame.png")
-	bOpt = love.graphics.newImage("gui/options.png")
-	bQt = love.graphics.newImage("gui/quit.png")
+	bSG = love.graphics.newImage("gui/startgame2.png")
+	bOpt = love.graphics.newImage("gui/options2.png")
+	bQt = love.graphics.newImage("gui/quit2.png")
 	
 	-- create buttons
 	buttonStartGame = loveframes.Create("imagebutton")

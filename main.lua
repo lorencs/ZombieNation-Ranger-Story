@@ -10,6 +10,7 @@ require "loveframes/init"
 require "Units/Point"
 require "Units/shortestPath/Astar"
 require "Units/Player"
+require "utils/Sound"
 
 --[[ 
 H
@@ -162,7 +163,7 @@ function startMenuSTATE:draw()
 	
 	-- cursor
 	love.graphics.reset()	
-	love.graphics.draw(cursor, love.mouse.getX(), love.mouse.getY())		
+	love.graphics.draw(cursor, love.mouse.getX()-25/2, love.mouse.getY()-25/2)	
 end
 
 function startMenuSTATE:mousepressed(x, y, button)
