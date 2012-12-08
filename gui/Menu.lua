@@ -1,9 +1,6 @@
-Menu = {}
+require "gui/ui/Healthbar"
 
---[[
-Mikus:  added alpha value to menu bg color, so it can be a little bit transparent
-		i think it looks cool, you can change it back if you want
-]]--
+Menu = {}
 
 -- constructor
 function Menu:new(baseX, w, h)
@@ -31,7 +28,9 @@ function Menu:new(baseX, w, h)
 		
 		normalTextColor = {200,200,200,255},
 		
-		visible = true
+		visible = true,
+		
+		healthbar = Healthbar:new(7, height - 107, 10,100)
 	}	
 	
 	setmetatable(object, { __index = Menu })
@@ -41,7 +40,7 @@ end
 -- setup all menues
 function Menu:setup()
 	self:setMainMenu()
-	self:setDebugMenu()
+	--self:setDebugMenu()
 	--self:setBuildingMenu()
 end
 
@@ -53,7 +52,7 @@ function Menu:setMainMenu()
 	local yn = self.ys + bh
 
 	-- selection text
-	selectText = loveframes.Create("text")
+	--[[selectText = loveframes.Create("text")
 	selectText:SetPos(91, height - menuWidth + 15)
 	selectText:SetText({{0,0,0,150}, "No Units Selected"})
 	
@@ -202,7 +201,7 @@ function Menu:setMainMenu()
 	table.insert(self.mainMenu, suppliesLabelText)
 	table.insert(self.mainMenu, workerCount)
 	table.insert(self.mainMenu, rangerCount)
-	table.insert(self.mainMenu, humanCount)
+	table.insert(self.mainMenu, humanCount)]]--
 end
 
 
@@ -301,29 +300,32 @@ function Menu:showHide(bool)
 	for _,v in pairs(self.mainMenu) do
 		v:SetVisible(self.visible)
 	end
-	for _,v in pairs(self.debugMenu) do
-		v:SetVisible(self.visible)
-	end
+	--for _,v in pairs(self.debugMenu) do
+	--	v:SetVisible(self.visible)
+	--end
 	--[[for _,v in pairs(self.buildingMenu) do
 		v:SetVisible(self.visible)
 	end]]--
 	
-	textDebug:SetVisible(self.visible)
-	checkDebug:SetVisible(self.visible)
-	selectDebug:SetVisible(self.visible)
+	--textDebug:SetVisible(self.visible)
+	--checkDebug:SetVisible(self.visible)
+	--selectDebug:SetVisible(self.visible)
 end
 
-function Menu:update(dt)
+function Menu:update(player, dt)
+	-- healthbar
+	self.healthbar:update(player)
+
 	for _,v in pairs(self.mainMenu) do
 		v:SetVisible(false)
 	end
-	for _,v in pairs(self.debugMenu) do
-		v:SetVisible(self.debugMode)
-	end
+	--for _,v in pairs(self.debugMenu) do
+	--	v:SetVisible(self.debugMode)
+	--end
 
-	selectDebug:SetVisible(self.debugMode)
+	--selectDebug:SetVisible(self.debugMode)
 	
-	local count, uType = unitManager:selectedType()
+	--[[local count, uType = unitManager:selectedType()
 
 	local text = {{0,0,0,150}, "No units selected"}
 	if (count > 0) then	
@@ -362,7 +364,7 @@ function Menu:update(dt)
 	currSuppliesText:SetVisible(self.visible)
 	currSuppliesText:SetText({self.normalTextColor, supplies})
 	
-	selectText:SetText(text)
+	selectText:SetText(text)]]--
 end
 
 -- draw the menu
@@ -372,21 +374,23 @@ function Menu:draw()
 		
 		love.graphics.reset()
 	end
+	
+	self.healthbar:draw()
 end
 
 function Menu:delete()
 for _,v in pairs(self.mainMenu) do
 		v:Remove()
 	end
-	for _,v in pairs(self.debugMenu) do
-		v:Remove()
-	end
+	--for _,v in pairs(self.debugMenu) do
+	--	v:Remove()
+	--end
 	--[[for _,v in pairs(self.buildingMenu) do
 		v:Remove()
 	end]]--
 	
-	textDebug:Remove()
-	checkDebug:Remove()
+	--textDebug:Remove()
+	--checkDebug:Remove()
 	goToNearest:Remove()
 	selectText:Remove()
 end

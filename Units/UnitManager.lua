@@ -258,6 +258,7 @@ function UnitManager:getClosestHuman(unitPos)
 	local cdist1, p1 = self:getClosestWorker(unitPos, "zombie")
 	local cdist2, p2 = self:getClosestRanger(unitPos, "zombie")
 	local cdist3, p3 = self:getClosestCivilian(unitPos, "zombie")
+	local cdist4 = Unit:distanceBetweenPoints( unitPos.x, unitPos.y, player.cx, player.cy )
 	local cdist = cdist1
 	local p = p1
 	if cdist2 < cdist then
@@ -267,6 +268,10 @@ function UnitManager:getClosestHuman(unitPos)
 	if cdist3 < cdist then
 		cdist = cdist3
 		p = p3
+	end
+	if cdist4 < cdist then
+		cdist = cdist4
+		p = player
 	end
 	
 	if cdist < 9990 then
@@ -318,7 +323,7 @@ end
 -- Update function
 function UnitManager:update(dt, gravity)
 	--check if user won/lost
-	if number_of_humans <= 0 and number_of_rangers <= 0 and number_of_workers <= 0 then Gamestate.switch(loseSTATE) end
+	if not player.alive then Gamestate.switch(loseSTATE) end
 	if number_of_zombies <= 0 then Gamestate.switch(winSTATE) end
 	
 	if self.paused == false then		-- IF THE GAME IS NOT PAUSED..

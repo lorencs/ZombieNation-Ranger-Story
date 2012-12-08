@@ -50,7 +50,8 @@ function Ranger:new(xnew,ynew)
 	tilesCrossed = 0,
 	turnFast = false,
 	animation = SpriteAnimation:new("Units/images/ranger1.png", 10, 12, 8, 1),
-	randomDirectionTimer = math.random(7, 10)
+	randomDirectionTimer = math.random(7, 10),
+	nopath = false									-- gets set to true if a path isnt found to this unit (non-dynamic world => no path will ever be found)
 	}
 
 	setmetatable(new_object, Ranger_mt )				-- add the new_object to metatable of Ranger

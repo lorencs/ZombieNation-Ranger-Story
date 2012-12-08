@@ -16,7 +16,7 @@ function Player:new(xnew,ynew)
     height = 0,
     state = "",
 	speed = 0,
-	normalSpeed = 25,
+	normalSpeed = 27,
 	huntingSpeed = 30,
 	xSpeed = 0,
 	ySpeed = 0,
@@ -43,7 +43,13 @@ function Player:new(xnew,ynew)
 	-- gun stuff
 	totalAmmo = 999999,
 	clipAmmo = 8,
-	reloadTimer = 0
+	reloadTimer = 0,
+	alertRadius = 200,				-- radius in which zombies will hear your gunshot
+	
+	-- health status
+	health = 100,
+	tickRate = 15,
+	alive = true
 	}
 
 	setmetatable(object, { __index = Player })		
@@ -112,6 +118,17 @@ end
  
 -- update function
 function Player:update(dt)
+	-- if attacked, decrease health
+	if self.attacked == 1 then 
+		self.health = self.health - self.tickRate*dt
+	end
+	
+	-- if health <= 0, die
+	if self.health <= 0 then
+		self.alive = false
+		infoText:addText("You have been killed!")
+	end
+
 	if paused == true then return end
 
 	-- update bullets
@@ -168,10 +185,7 @@ function Player:update(dt)
 	
 	-- update angle
 	self.angle = self:angleTo(love.mouse.getX(), love.mouse.getY())
-	
-	-- if the Ranger is attacked, then he can't move (or could make him move very slow?)
-	if self.attacked == 1 then return end
-	
+		
 	-- shoot if shooting
 	if self.shooting and self.shootingTimer <= 0 and not self.reloading then
 		if self:shoot() then
@@ -252,6 +266,7 @@ end
 -- shoots if enough ammo, returns false if clip empty
 function Player:shoot()
 	if self.clipAmmo > 0 then
+		self:alertZombies()
 		self.gunshotSound:play()
 		local newBullet = Bullet:new(self.cx, self.cy, self.angle)
 		newBullet:init()
@@ -261,6 +276,15 @@ function Player:shoot()
 	else 
 		self.emptyclipSound:play()
 		return false
+	end
+end
+
+function Player:alertZombies()
+	for i,v in pairs(zombie_list) do
+		local dist = self:distance(self.cx, self.cy, v.cx, v.cy)
+		if dist <= self.alertRadius then
+			v:goTo(self.cx, self.cy)
+		end
 	end
 end
 
@@ -305,4 +329,12 @@ function Player:collideWithTile(x,y)
 	elseif (dx == -1) and (dy == 1) then 	self.ySpeed = 0 self.xSpeed = 0
 	elseif (dx == -1) and (dy == 0) then 	self.xSpeed = 0
 	elseif (dx == -1) and (dy == -1) then 	self.ySpeed = 0 self.xSpeed = 0 end
+end
+
+function Player:distance(x1, y1, x2, y2)
+	local x_v1, y_v1 = 0
+	
+	x_v1 = x2 - x1
+	y_v1 = y2 - y1
+	return math.sqrt( x_v1 * x_v1 + y_v1 * y_v1 )
 end

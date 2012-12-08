@@ -78,7 +78,7 @@ end
 function Car:draw()
 	--love.graphics.setColor(100,100,100,255)	
 	--love.graphics.line(self.backWheelX, self.backWheelY, self.frontWheelX, self.frontWheelY)
-	love.graphics.draw( self.canvas,  self.x-10, self.y,  self.carHeading,   1.0, 1.0, 10,20 )
+	love.graphics.draw( self.canvas,  self.x-10, self.y-20,  self.carHeading,   1.0, 1.0, 10,20 )
 	
 	--love.graphics.polygon("fill", self.backWheelX -(10*math.sin(self.carHeading)), self.backWheelY-(10*math.cos(self.carHeading)), 
 	--							  self.frontWheelX-(10*math.sin(self.carHeading)), self.frontWheelY-(10*math.cos(self.carHeading)), 
@@ -96,13 +96,13 @@ function Car:update(dt)
 	local left, right, up, down = false, false, false, false
 	if love.keyboard.isDown("a")  then 
 		left = true
-		if self.steerAngle > -1*(math.pi*0.8) then 
+		if self.steerAngle > -1*(math.pi/2) then 
 			self.steerAngle = self.steerAngle - (self.turnSpeed*math.pi/180)*dt
 		end
 	end
 	if love.keyboard.isDown("d") then 
 		right = true
-		if self.steerAngle < math.pi*0.8 then 
+		if self.steerAngle < math.pi/2 then 
 			self.steerAngle = self.steerAngle + (self.turnSpeed*math.pi/180)*dt
 		end
 	end

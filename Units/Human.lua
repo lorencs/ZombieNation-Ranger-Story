@@ -40,7 +40,8 @@ function Human:new(xnew,ynew)
 	neighbourTiles = {},
 	animation = SpriteAnimation:new("Units/images/human1.png", 10, 8, 8, 1),
 	path = nil,
-	randomDirectionTimer = math.random(7, 10)
+	randomDirectionTimer = math.random(7, 10),
+	nopath = false									-- gets set to true if a path isnt found to this unit (non-dynamic world => no path will ever be found)
 	}
 
 	setmetatable(new_object, Human_mt )				-- add the new_object to metatable of Human

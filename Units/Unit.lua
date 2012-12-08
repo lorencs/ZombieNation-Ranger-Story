@@ -347,7 +347,9 @@ function Unit:getShortestPath(x1,y1,x2,y2)
 	if path ~= nil then 
 		self.path = path 
 		return true
-	else return false end
+	else 
+		return false 
+	end
 end
 
 function Unit:inLineOfSight(cx, cy)

@@ -69,6 +69,9 @@ loseSTATE = Gamestate.new()
 paused = false
 multiplier = 1
 
+-- set false to play as (buggy ass) car
+playAsPlayer = true
+
 function love:load()	
 	-- debug menu bools
 	drawTile = "R"
@@ -185,12 +188,14 @@ end
 -- put any resetting code in here
 function gameSTATE:enter()
 	-- player
-	--player = Player:new()
-	--player:init()
+	if playAsPlayer then
+		player = Player:new()
+		player:init()
+	else
+		car = Car:new()
+		car:init()
+	end
 	
-	car = Car:new()
-	car:init()
-
 	-- init menu
 	menu = Menu:new(0, width, 115)
 	menu:setup()
@@ -233,18 +238,24 @@ function gameSTATE:update(dt)
 	end
 
 	-- player
-	--player:update(dt)
-	car:update(dt)
+	if playAsPlayer then
+		player:update(dt)
+	else
+		car:update(dt)
+	end
 	
 	-- viewpoint movement - arrow keys
-	--view:update(player)
-	view:update(car)
+	if playAsPlayer then
+		view:update(player)
+	else
+		view:update(car)
+	end
 	
 	-- update unit positions
 	unitManager:update(dt)
 	
 	-- update menu
-	menu:update(dt)
+	menu:update(player, dt)
 	
 	-- current mouse position
 	xpos = math.floor((love.mouse.getX() + view.x) / map.tileSize)
@@ -298,8 +309,11 @@ function gameSTATE:draw()
 	unitManager:draw()
 	
 	-- player
-	--player:draw()
-	car:draw()
+	if playAsPlayer then 
+		player:draw()
+	else	
+		car:draw()
+	end
 	
 	-- unset camera
 	camera:unset()					
@@ -350,13 +364,13 @@ end
 
 -- callback functions needed by loveframes, we can use them too
 function gameSTATE:mousepressed(x, y, button)
-	--player:mousepressed(x, y, button)
+	if playAsPlayer then player:mousepressed(x, y, button) end
 	minimap:mousepressed(x, y, button)
 	loveframes.mousepressed(x, y, button)
 end
 
 function gameSTATE:mousereleased(x, y, button)
-	--player:mousereleased(x, y, button)
+	if playAsPlayer then player:mousereleased(x, y, button) end
 	loveframes.mousereleased(x, y, button)	
 	minimap:mousereleased()	
 end

@@ -25,7 +25,7 @@ function Zombie:new(x_new, y_new)
 	radius = 4,
     width = 0,
     height = 0,
-	speed = 0,
+	speed = 26,
     state = "",
     runSpeed = 0,
 	directionTimer = 0,
@@ -42,9 +42,6 @@ function Zombie:new(x_new, y_new)
 	followingTag = 0,									-- index of the human in human_list that this zombie will follow. if it's 0, then this zombie
 	followingType = "None",
 	selected = false,
-	v1 = Point:new(0,0),							-- vertices for the field of view triangle
-	v2 = Point:new(0,0),
-	v3 = Point:new(0,0),
 	controlled = false,
 	onCurrentTile = 0,
 	neighbourTiles = {},
@@ -108,7 +105,6 @@ function Zombie:setupUnit()							-- init vars for Zombie unit
 	self.cx = self.x + self.radius
 	self.cy = self.y - self.radius
 	
-	self.speed = 20
 	self.dirVector = self:getDirection(self.angle, self.speed)
 	self.x_direction = 0
 	self.y_direction = 0
@@ -129,11 +125,6 @@ function Zombie:draw(i)
 
 	love.graphics.setColor(211,211,211,150)
 	
-	------------------------------- UPDATE FIELD OF VIEW VERTICES
-	-- for triangle:
-	self.v1 = Point:new(self.x + self.radius, self.y + self.radius)
-	self.v2 = Point:new(self.x + math.cos( (self.angle - 40) * (math.pi/180) )*90 + self.radius, self.y + math.sin( (self.angle - 40) * (math.pi/180) )*90 + self.radius)
-	self.v3 = Point:new(self.x + math.cos( (self.angle + 40 ) * (math.pi/180) )*90 + self.radius, self.y + math.sin( (self.angle + 40) * (math.pi/180) )*90 + self.radius)
 	-- for arc:
 	self.fovStartAngle = self.angle - self.angle/2
 	self.fovEndAngle = self.angle + self.angle/2
@@ -246,20 +237,28 @@ function Zombie:update(dt, zi)
 			if hUnit ~= nil then
 				--print("zombie: "..self.tag.." is moving towards human: "..hUnit.tag)
 				-- this should set self.path
-				self:getShortestPath(self.x, self.y, hUnit.x, hUnit.y)
 				
-				-- if self.path is set ..
-				if (self.path ~= nil) then
-					self.followingTileCount = 0
-					self.followingSP = true
-					self.timerToGetToNextTile = 0
-					self.tarXTile = self.path[#self.path - self.followingTileCount].x 
-					self.tarYTile = self.path[#self.path - self.followingTileCount].y
-					self.followingTileCount = self.followingTileCount + 1
-					-- its + map.tileSize / 2 because the targetAngle is aiming for the middle of the tile !
-					self.targetAngle = self:angleToXY( self.x, self.y, self.tarXTile * map.tileSize + map.tileSize / 2, self.tarYTile * map.tileSize + map.tileSize / 2 )
-					--self.angle = self.targetAngle
-					self.dirVec = self:calcShortestDirection(self.angle, self.targetAngle)
+				-- avoid constantly not finding path to unit 
+				if not hUnit.nopath then
+					print("No Path exists to this human!")
+					self:getShortestPath(self.cx, self.cy, hUnit.cx, hUnit.cy)					
+					
+					-- if self.path is set ..
+					if (self.path ~= nil) then
+						self.followingTileCount = 0
+						self.followingSP = true
+						self.timerToGetToNextTile = 0
+						self.tarXTile = self.path[#self.path - self.followingTileCount].x 
+						self.tarYTile = self.path[#self.path - self.followingTileCount].y
+						self.followingTileCount = self.followingTileCount + 1
+						-- its + map.tileSize / 2 because the targetAngle is aiming for the middle of the tile !
+						self.targetAngle = self:angleToXY( self.x, self.y, self.tarXTile * map.tileSize + map.tileSize / 2, self.tarYTile * map.tileSize + map.tileSize / 2 )
+						--self.angle = self.targetAngle
+						self.dirVec = self:calcShortestDirection(self.angle, self.targetAngle)
+					else
+						print("No Path Found (in zombie code) first time!")
+						hUnit.nopath = true
+					end
 				end
 			end
 			
@@ -477,6 +476,19 @@ function Zombie:update(dt, zi)
 		if self.followingTag ~= 0 then break end
 	end
 	
+	local val = self:pointInArc(self.x, self.y, player.cx, player.cy, 
+								self.fov_radius, self.fovStartAngle, self.fovEndAngle)	-- detect humans in an arc (pie shape)
+	if val then										-- if human i is in the field of view of the zombie
+		self.followingTag = 9999
+		self.followingType = "Player"
+		self.state = "Chasing ".. self.followingTag
+		
+		-- disable following shortest path as the zombie is now chasing a human
+		self.followingSP = false
+		self.path = nil
+		--self.zombieSniffTimer = 0
+	end
+	
  end
  
  function Zombie:follow_human(dt)
@@ -510,15 +522,19 @@ function Zombie:update(dt, zi)
 		end
 		------------------------------- CALCULATE DISTANCE BETWEEN ZOMBIE AND THE WORKER IT IS FOLLOWING
 		dist = self:distanceBetweenPoints(self.cx,self.cy,worker_list[h_index].cx, worker_list[h_index].cy)
+	elseif self.followingType == "Player" then		
+		------------------------------- CALCULATE DISTANCE BETWEEN ZOMBIE AND THE WORKER IT IS FOLLOWING
+		dist = self:distanceBetweenPoints(self.cx,self.cy,player.cx, player.cy)
 	end
 
 	-- if its very close, zombie eats human
 	if dist < (self.radius * 2 + 7) then
 	   
 	   -- set followed unit's attacked state to 1
-	   if self.followingType == "Human" then human_list[h_index].attacked = 1
-	   elseif self.followingType == "Ranger" then ranger_list[h_index].attacked = 1
-	   elseif self.followingType == "Worker" then worker_list[h_index].attacked = 1 end
+		if self.followingType == "Human" then human_list[h_index].attacked = 1
+		elseif self.followingType == "Ranger" then ranger_list[h_index].attacked = 1
+		elseif self.followingType == "Worker" then worker_list[h_index].attacked = 1
+		elseif self.followingType == "Player" then player.attacked = 1 end
 	   
 		if (self.time_kill > 2) then									-- unit with index 'followingTag' should be dead by now !
 			local deadx = 99
@@ -528,24 +544,26 @@ function Zombie:update(dt, zi)
 				deady = human_list[h_index].y
 				table.remove(human_list, h_index)							-- remove human from human_list array
 				number_of_humans = number_of_humans - 1						-- decrease count of humans alive
-				infoText:addText("A civilian has been killed by a zombie !")
+				infoText:addText("A civilian has been killed by a zombie!")
 			elseif self.followingType == "Ranger" then 
 				deadx = ranger_list[h_index].x
 				deady = ranger_list[h_index].y
 				table.remove(ranger_list, h_index)							-- remove human from human_list array
 				number_of_rangers = number_of_rangers - 1						-- decrease count of humans alive
-				infoText:addText("A ranger has been killed by a zombie !")
+				infoText:addText("A ranger has been killed by a zombie!")
 			elseif self.followingType == "Worker" then 
 				deadx = worker_list[h_index].x
 				deady = worker_list[h_index].y
 				if worker_list[h_index].working == false then
 					unitManager.idleWorkers = unitManager.idleWorkers - 1
-					infoText:addText("An idle worker has been killed by a zombie !")
+					infoText:addText("An idle worker has been killed by a zombie!")
 				else
-					infoText:addText("A worker has been killed by a zombie !")
+					infoText:addText("A worker has been killed by a zombie!")
 				end
 				table.remove(worker_list, h_index)							-- remove human from human_list array
 				number_of_workers = number_of_workers - 1						-- decrease count of humans alive
+			elseif self.followingType == "Player" then 
+				return
 			end
 			
 			number_of_zombies = number_of_zombies + 1					-- increase count of zombies alive
@@ -565,15 +583,24 @@ function Zombie:update(dt, zi)
 		
 		self.time_kill = self.time_kill + dt
 		return								-- no need to follow the human unit anymore
-	elseif	dist > 120 then					-- if zombie is too far, abandon the follow
+	elseif self.followingType == "Player" then
+		player.attacked = 0
+	end
+	
+	if	dist > 120 then					-- if zombie is too far, abandon the follow
 		self.followingTag = 0					-- unset follow
 		self.state = "Looking around"
 		if self.followingType == "Human" then
 			human_list[h_index].panicMode = false		-- the human is not in panicMode anymore as it is not being followed anymore
+			human_list[h_index].attacked = 0	
 		elseif self.followingType == "Ranger" then
 			ranger_list[h_index].panicMode = false
+			ranger_list[h_index].attacked = 0
 		elseif self.followingType == "Worker" then
 			worker_list[h_index].panicMode = false
+			worker_list[h_index].attacked = 0
+		elseif self.followingType == "Player" then
+			player.attacked = 0
 		end
 	end
 	
@@ -587,6 +614,8 @@ function Zombie:update(dt, zi)
 		self.targetAngle = self:angleToXY(self.x,self.y,ranger_list[h_index].x,ranger_list[h_index].y)
 	elseif self.followingType == "Worker" then
 		self.targetAngle = self:angleToXY(self.x,self.y,worker_list[h_index].x,worker_list[h_index].y)
+	elseif self.followingType == "Player" then
+		self.targetAngle = self:angleToXY(self.x,self.y,player.cx,player.cy)
 	end
 	
 	-- check map boundaries
@@ -690,9 +719,33 @@ function Zombie:die()
 			end
 		end
 		if h_index ~= -1 then ranger_list[h_index].panicMode = false end
+	elseif self.followingType == "Player" then
+		player.attacked = 0
 	end
 	infoText:addText("A zombie has been killed !")
 	-- mark this zombie for deletion (unitManager's update method will delete it on next update)
 	self.delete = true	
+end
+
+function Zombie:goTo(targetX, targetY)	
+
+	self:getShortestPath(self.cx, self.cy, targetX, targetY)					
+		
+	-- if self.path is set ..
+	if (self.path ~= nil) then
+		self.followingTileCount = 0
+		self.followingSP = true
+		self.timerToGetToNextTile = 0
+		self.tarXTile = self.path[#self.path - self.followingTileCount].x 
+		self.tarYTile = self.path[#self.path - self.followingTileCount].y
+		self.followingTileCount = self.followingTileCount + 1
+		-- its + map.tileSize / 2 because the targetAngle is aiming for the middle of the tile !
+		self.targetAngle = self:angleToXY( self.x, self.y, self.tarXTile * map.tileSize + map.tileSize / 2, self.tarYTile * map.tileSize + map.tileSize / 2 )
+		--self.angle = self.targetAngle
+		self.dirVec = self:calcShortestDirection(self.angle, self.targetAngle)
+	else
+		print("No Path Found to gunshot")
+	end
+
 end
  
