@@ -44,7 +44,7 @@ function Player:new(xnew,ynew)
 	totalAmmo = 999999,
 	clipAmmo = 8,
 	reloadTimer = 0,
-	alertRadius = 200,				-- radius in which zombies will hear your gunshot
+	alertRadius = 300,				-- radius in which zombies will hear your gunshot
 	
 	-- health status
 	health = 100,

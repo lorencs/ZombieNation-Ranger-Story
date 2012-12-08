@@ -78,7 +78,7 @@ function love:load()
 	defaultFont = love.graphics.newFont(12)
 	
 	-- music
-	--music = love.audio.newSource("/units/fellowship.mp3") 
+	music1 = love.audio.newSource("/music/28weeks.mp3") 
 	
 	-- seeding randomizer
 	randomizer = math.random(30,60)				
@@ -134,6 +134,10 @@ function love:load()
 end
 
 ------------------ START STATE CODE ----------------------------------------------
+function startMenuSTATE:init()
+	love.audio.play(music1)
+end
+
 function startMenuSTATE:enter()
 	Timer.clear()	
 	titleScreen = love.graphics.newImage("gui/titleScreen3.png")
